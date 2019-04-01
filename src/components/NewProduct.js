@@ -3,19 +3,26 @@ import { PhotoPicker } from "aws-amplify-react";
 // prettier-ignore
 import { Form, Button, Input, Notification, Radio, Progress } from "element-react";
 
+const initialState = {
+  description: "",
+  price: "",
+  imagePreview: "",
+  image: "",
+  shipped: false
+};
 class NewProduct extends React.Component {
-  state = {
-    description: "",
-    price: "",
-    shipped: false
-  };
+  state = { ...initialState };
 
   handleAddProduct = () => {
-    console.log("product added");
+    console.log(this.state);
+    this.setState({ ...initialState });
+  };
+  discardPhotoPreview = () => {
+    this.setState({ imagePreview: "" });
   };
 
   render() {
-    const { shipped } = this.state;
+    const { description, price, image, shipped, imagePreview } = this.state;
     return (
       <>
         <div className="flex-center">
@@ -26,6 +33,7 @@ class NewProduct extends React.Component {
             <Input
               type="text"
               icon="information"
+              value={description}
               placeholder="description"
               onChange={description => this.setState({ description })}
             />
@@ -34,6 +42,7 @@ class NewProduct extends React.Component {
             <Input
               type="number"
               icon="plus"
+              value={price}
               placeholder="Price ($USD)"
               onChange={price => this.setState({ price })}
             />
@@ -56,10 +65,49 @@ class NewProduct extends React.Component {
               </Radio>
             </div>
           </Form.Item>
-          <PhotoPicker />
+          {imagePreview && (
+            <img
+              className="image-preview"
+              src={imagePreview}
+              alt="Product Preview"
+            />
+          )}
+          <PhotoPicker
+            title="Product Image"
+            preview="hidden"
+            onLoad={url => this.setState({ imagePreview: url })}
+            onPick={file => this.setState({ image: file })}
+            theme={{
+              formContainer: {
+                margin: 0,
+                padding: "0.8em"
+              },
+              formSection: {
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "center"
+              },
+              sectionBody: {
+                margin: 0,
+                width: "250px"
+              },
+              sectionHeader: {
+                padding: "0.2em",
+                color: "var(--darkAmazonOrange"
+              },
+              photoPickerButton: {
+                display: "none"
+              }
+            }}
+          />
           <Form.Item>
-            <Button type="primary" onClick={this.handleAddProduct}>
-              Submit
+            <Button
+              disabled={!image || !description || !price}
+              type="primary"
+              onClick={this.handleAddProduct}
+            >
+              Add Product
             </Button>
           </Form.Item>
         </Form>

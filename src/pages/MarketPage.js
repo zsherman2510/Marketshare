@@ -7,24 +7,22 @@ import NewProduct from "../components/NewProduct";
 import Product from "../components/Product";
 class MarketPage extends React.Component {
   state = {
-    market: null,
+    market: {},
     isLoading: true,
     isMarketOwner: false
   };
-
-  componentDidMount() {
-    this.handleGetMarket();
-  }
 
   handleGetMarket = async () => {
     const input = {
       id: this.props.marketId
     };
-    const results = await API.graphql(graphqlOperation(getMarket, input));
-    console.log({ results });
-    this.setState({ market: results.data.getMarket, isLoading: false }, () => {
+    const result = await API.graphql(graphqlOperation(getMarket, input));
+    console.log({ result });
+    this.setState({ market: result.data.getMarket, isLoading: false }, () => {
       this.checkMarketOwner();
     });
+
+    console.log(this.state.market);
   };
 
   checkMarketOwner = () => {
@@ -35,8 +33,12 @@ class MarketPage extends React.Component {
     }
   };
 
+  componentDidMount() {
+    this.handleGetMarket();
+  }
+
   render() {
-    const { market, isLoading, isMarketOwner } = this.state;
+    const { isLoading, market, isMarketOwner } = this.state;
     return isLoading ? (
       <Loading fullscreen={true} />
     ) : (
@@ -82,10 +84,10 @@ class MarketPage extends React.Component {
             name="2"
           >
             {/* <div className="product-list">
-                {market.products.items.map(product => (
-                  <Product product={product} />
-                ))}
-              </div> */}
+              {market.products.items.map(product => (
+                <Product product={product} />
+              ))}
+            </div> */}
           </Tabs.Pane>
         </Tabs>
       </>
