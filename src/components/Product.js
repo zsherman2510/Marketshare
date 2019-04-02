@@ -3,7 +3,7 @@ import { API, graphqlOperation } from "aws-amplify";
 import { S3Image } from "aws-amplify-react";
 // prettier-ignore
 import { Notification, Popover, Button, Dialog, Card, Form, Input, Radio } from "element-react";
-import { updateProduct } from "../graphql/mutations";
+import { updateProduct, deleteProduct } from "../graphql/mutations";
 import { convertCentsToDollars, convertDollarsToCents } from "../utils/index";
 import { UserContext } from "../App";
 import PayButton from "./PayButton";
@@ -13,7 +13,8 @@ class Product extends React.Component {
     updateProductDialog: false,
     description: "",
     price: "",
-    shipped: false
+    shipped: false,
+    deleteProductDialog: false
   };
 
   handleUpdateProduct = async productId => {
@@ -36,14 +37,37 @@ class Product extends React.Component {
         type: "success",
         duration: 2000
       });
-      setTimeout(() => window.location.reload(), 4000);
     } catch (err) {
       console.error(`Failed to update product with id: ${productId}`, err);
     }
   };
 
+  handleDeleteProduct = async productId => {
+    try {
+      this.setState({ deleteProductDialog: false });
+      const input = {
+        id: productId
+      };
+      await API.graphql(graphqlOperation(deleteProduct, { input }));
+      Notification({
+        title: "success",
+        message: "Product successfully deleted!",
+        type: "success",
+        duration: 2000
+      });
+    } catch (err) {
+      console.error(`Failed to delete product with id ${productId}`, err);
+    }
+  };
+
   render() {
-    const { updateProductDialog, description, price, shipped } = this.state;
+    const {
+      updateProductDialog,
+      deleteProductDialog,
+      description,
+      price,
+      shipped
+    } = this.state;
     const { product } = this.props;
     return (
       <UserContext.Consumer>
@@ -74,7 +98,9 @@ class Product extends React.Component {
                     <span className="mx-1">
                       ${convertCentsToDollars(product.price)}
                     </span>
-                    {!isProductOwner && <PayButton />}
+                    {!isProductOwner && (
+                      <PayButton product={product} user={user} />
+                    )}
                   </div>
                 </div>
               </Card>
@@ -95,14 +121,50 @@ class Product extends React.Component {
                         })
                       }
                     />
-                    <Button
-                      type="danger"
-                      icon="delete"
-                      className="m-1"
-                      onClick={() =>
-                        this.setState({ updateProductDialog: false })
+                    <Popover
+                      placement="top"
+                      width="160"
+                      trigger="click"
+                      visible={deleteProductDialog}
+                      content={
+                        <>
+                          <p> Do you want to delete this?</p>
+                          <div className="text-right">
+                            <Button
+                              size="mini"
+                              type="text"
+                              className="m-1"
+                              onClick={() =>
+                                this.setState({ deleteProductDialog: false })
+                              }
+                            >
+                              Cancel
+                            </Button>
+                            <Button
+                              type="primary"
+                              size="mini"
+                              className="m-1"
+                              onClick={() =>
+                                this.handleDeleteProduct(product.id)
+                              }
+                            >
+                              Confirm
+                            </Button>
+                          </div>
+                        </>
                       }
-                    />
+                    >
+                      <Button
+                        type="danger"
+                        icon="delete"
+                        className="m-1"
+                        onClick={() =>
+                          this.setState({
+                            deleteProductDialog: true
+                          })
+                        }
+                      />
+                    </Popover>
                   </>
                 )}
               </div>
